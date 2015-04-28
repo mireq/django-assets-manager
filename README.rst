@@ -5,7 +5,7 @@ Simple assets manager with dependencies
 Install
 -------
 
-`pip install https://github.com/mireq/django-assets-manager.git`
+`pip install 'git+https://github.com/mireq/django-assets-manager.git'`
 
 Usage
 -----
