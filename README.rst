@@ -57,12 +57,11 @@ Settings
 				{
 					'name': 'logo',
 					'src': 'img/logo.png',
-					'mode': 'no-repeat', 'width': 64, 'height': 64
 				},
 				{
 					'name': 'bar_bg',
 					'src': 'img/bar_bg.png',
-					'mode': 'repeat-x', 'width': 1, 'height': 30
+					'mode': 'repeat-x',
 				},
 			),
 		},

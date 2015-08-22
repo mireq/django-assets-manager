@@ -155,6 +155,12 @@ class SpriteCompiler:
 		sizes = ((1, ''),)
 		sizes += tuple(sprites.get('extra_sizes', ()))
 
+		for img in sprites['images']:
+			if not 'width' in img or not 'height' in img:
+				(width, height) = Image.open(to_localfile(img['src'])).size
+				img['width'] = width
+				img['height'] = height
+
 		for size, suffix in sizes:
 			sprite_conf = self.preprocess_pixel_ratio(sprites, suffix)
 			packer = Packer(sprite_conf['width'], sprite_conf['height'])
