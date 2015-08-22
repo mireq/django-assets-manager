@@ -95,7 +95,7 @@ class Packer:
 		x, y = root['pos']
 
 		root['down'] =  {'pos': (x, y + h), 'size': (root_w, root_h - h), 'used': False, 'down': None, 'right': None}
-		root['right'] = {'pos': (x + w, y), 'size': (root_w - w, h), 'used': False, 'down': None, 'right': None}
+		root['right'] = {'pos': (x + w, y), 'size': (root_w - w, root_h), 'used': False, 'down': None, 'right': None}
 
 
 class SpriteGenerator:
