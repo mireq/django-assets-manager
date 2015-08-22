@@ -30,6 +30,8 @@ class Packer:
 		repeat_mode = None
 
 		for block in blocks:
+			if not 'mode' in block:
+				block['mode'] = 'no-repeat'
 			if block['mode'] == 'repeat-x':
 				self.fit_block_repeat_x(block)
 				if repeat_mode is None or repeat_mode == 'x':
