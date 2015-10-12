@@ -176,7 +176,7 @@ class SpriteCompiler:
 					'_w': str(sprites['width'] * size) + 'px',
 					'_h': str(sprites['height'] * size) + 'px',
 					'_size': str(sprites['width'] * size) + 'px ' + str(sprites['height'] * size) + 'px',
-					'_url': 'url(' + settings.STATIC_URL + sprite_conf['output'] + ')',
+					'_url': 'url(static(\'' + sprite_conf['output'] + '\'))',
 				}
 			)
 
