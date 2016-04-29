@@ -123,12 +123,20 @@ class SpriteGenerator:
 			for i in range((self.size[1] + h - 1) / h):
 				self.out_image.paste(in_image, (image['pos'][0] * self.pixel_ratio, i * h * self.pixel_ratio))
 
-	def generate_scss(self, images, filename, varname, metadata):
-		f = open(to_localfile(filename), 'w')
-		f.write('$' + varname + ': (\n')
+	def generate_scss(self, sprites, sprite_configs):
+		metadata = {
+			'_w': str(sprites['width']) + 'px',
+			'_h': str(sprites['height']) + 'px',
+		}
+		metadata['_size'] = metadata['_w'] + ' ' + metadata['_h']
+		metadata['_ratio'] = '(' + (' '.join(str(config['ratio']) for config in sprite_configs)) + ')'
+		metadata['_url'] = '(' + (' '.join('url(static("' + config['output'] + '"))' for config in sprite_configs)) + ')'
+
+		f = open(to_localfile(sprites['scss_output']), 'w+')
+		f.write('$' + sprites['name'] + ': (\n')
 		for k, v in metadata.iteritems():
 			f.write(k + ': ' + v + ',\n')
-		f.write(',\n'.join([self.generate_image_scss(img) for img in images]))
+		f.write(',\n'.join([self.generate_image_scss(img) for img in sprite_configs[0]['images']]))
 		f.write('\n);')
 
 	def generate_image_scss(self, image):
@@ -161,32 +169,26 @@ class SpriteCompiler:
 				img['width'] = width
 				img['height'] = height
 
+		sprite_configs = []
 		for size, suffix in sizes:
-			sprite_conf = self.preprocess_pixel_ratio(sprites, suffix)
+			sprite_conf = self.preprocess_pixel_ratio(sprites, (size, suffix))
 			packer = Packer(sprite_conf['width'], sprite_conf['height'])
 			packer.fit(sprite_conf['images'])
 			generator = SpriteGenerator(sprite_conf['output'], (sprite_conf['width'], sprite_conf['height']), size)
 			generator.generate(sprite_conf['images'])
-			safe_suffix = suffix.replace('@', '_')
-			generator.generate_scss(
-				images=sprite_conf['images'],
-				filename=self.add_suffix(sprites['scss_output'], safe_suffix),
-				varname=sprites['name'] + safe_suffix,
-				metadata={
-					'_w': str(sprites['width'] * size) + 'px',
-					'_h': str(sprites['height'] * size) + 'px',
-					'_size': str(sprites['width'] * size) + 'px ' + str(sprites['height'] * size) + 'px',
-					'_url': 'url(static(\'' + sprite_conf['output'] + '\'))',
-				}
-			)
+			sprite_configs.append(sprite_conf)
+		generator.generate_scss(sprites, sprite_configs)
 
 	def add_suffix(self, name, suffix):
 		return suffix.join(os.path.splitext(name))
 
-	def preprocess_pixel_ratio(self, sprites, suffix):
+	def preprocess_pixel_ratio(self, sprites, size):
+		ratio, suffix = size
 		sprites = deepcopy(sprites)
 		del sprites['extra_sizes']
 		sprites['output'] = self.add_suffix(sprites['output'], suffix)
+		sprites['ratio'] = ratio
+		sprites['suffix'] = suffix
 
 		for image in sprites['images']:
 			image['original'] = image['name']
@@ -208,8 +210,8 @@ class SpriteCompiler:
 			sizes = ((1, ''),)
 			sizes += tuple(sprite_def.get('extra_sizes', ()))
 
-			for _, suffix in sizes:
-				sprite_conf = self.preprocess_pixel_ratio(sprite_def, suffix)
+			for size, suffix in sizes:
+				sprite_conf = self.preprocess_pixel_ratio(sprite_def, (size, suffix))
 				dependencies[sprite_conf['output']] = {
 					'ts': self.get_mtime(sprite_conf['output']),
 					'dep': [(img['src'], self.get_mtime(img['src'])) for img in sprite_conf['images']],
