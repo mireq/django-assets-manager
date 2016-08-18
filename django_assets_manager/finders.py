@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.staticfiles.finders import BaseFinder
 from django.contrib.staticfiles.utils import matches_patterns
 from django.core.files.storage import FileSystemStorage
-from urllib import urlretrieve
+from six.moves.urllib.request import urlopen
 
 from .settings import ASSETS
 
@@ -21,9 +21,9 @@ class CdnFinder(BaseFinder):
 		return []
 
 	def list(self, ignore_patterns):
-		for package, data in ASSETS.iteritems():
+		for package, data in ASSETS.items():
 			if "cache" in data:
-				for src, dest in data["cache"]["paths"].iteritems():
+				for src, dest in data["cache"]["paths"].items():
 					dest = self.to_cache_path(package, dest)
 					if matches_patterns(dest, ignore_patterns):
 						continue
@@ -31,7 +31,8 @@ class CdnFinder(BaseFinder):
 					if not os.path.exists(self.storage.path(dest_dir)):
 						os.makedirs(self.storage.path(dest_dir))
 					if not os.path.exists(self.storage.path(dest)):
-						urlretrieve(self.to_url(src), self.storage.path(dest))
+						with open(self.storage.path(dest), 'wb') as fp:
+							fp.write(urlopen(self.to_url(src)).read())
 					yield dest, self.storage
 
 	def to_cache_path(self, package, dest):

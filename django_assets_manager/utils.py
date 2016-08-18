@@ -134,7 +134,7 @@ class SpriteGenerator:
 
 		f = open(to_localfile(sprites['scss_output']), 'w+')
 		f.write('$' + sprites['name'] + ': (\n')
-		for k, v in metadata.iteritems():
+		for k, v in metadata.items():
 			f.write(k + ': ' + v + ',\n')
 		f.write(',\n'.join([self.generate_image_scss(img) for img in sprite_configs[0]['images']]))
 		f.write('\n);')

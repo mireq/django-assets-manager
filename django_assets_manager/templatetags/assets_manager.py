@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from itertools import izip_longest
-
 import traceback
 from copy import deepcopy
+
 from django import template
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
+from six.moves import zip_longest
 
 from ..finders import CdnFinder
 from ..settings import ASSETS
@@ -62,13 +62,13 @@ def convert_asset_data(name, asset):
 	if isinstance(asset["attributes"], dict):
 		asset["attributes"] = [asset["attributes"]]
 
-	asset["css"] = list(izip_longest(asset['css'], asset['attributes'], fillvalue=[]))
-	asset["js"] = list(izip_longest(asset['js'], asset['attributes'], fillvalue=[]))
+	asset["css"] = list(zip_longest(asset['css'], asset['attributes'], fillvalue=[]))
+	asset["js"] = list(zip_longest(asset['js'], asset['attributes'], fillvalue=[]))
 	return asset
 
 
 ASSETS = deepcopy(ASSETS)
-ASSETS = {n: convert_asset_data(n, v) for n, v in ASSETS.iteritems()}
+ASSETS = {n: convert_asset_data(n, v) for n, v in ASSETS.items()}
 
 
 def get_asset_sources(asset, unused, asset_type):

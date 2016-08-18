@@ -1,1 +1,1 @@
-{% for src, attributes in data %}<script src="{{ src }}" type="text/javascript" charset="utf-8"{% for k, v in attributes.iteritems %} {{ k }}="{{ v }}"{% endfor %}></script>{% endfor %}
+{% for src, attributes in data %}<script src="{{ src }}" type="text/javascript" charset="utf-8"{% for k, v in attributes.items %} {{ k }}="{{ v }}"{% endfor %}></script>{% endfor %}
