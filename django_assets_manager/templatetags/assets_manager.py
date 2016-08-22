@@ -8,6 +8,7 @@ from django import template
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
+from django.utils import six
 from django.utils.safestring import mark_safe
 from six.moves import zip_longest
 
@@ -47,13 +48,13 @@ def convert_asset_data(name, asset):
 	asset.setdefault("depends", [])
 
 	asset.setdefault("css", [])
-	if isinstance(asset["css"], unicode):
+	if isinstance(asset["css"], six.string_types):
 		asset["css"] = [asset["css"]]
 	asset['css'] = [transform_static(path) for path in asset['css']]
 	asset['css'] = finder.transform_to_cache(name, asset['css'])
 
 	asset.setdefault("js", [])
-	if isinstance(asset["js"], unicode):
+	if isinstance(asset["js"], six.string_types):
 		asset["js"] = [asset["js"]]
 	asset['js'] = [transform_static(path) for path in asset['js']]
 	asset['js'] = finder.transform_to_cache(name, asset['js'])
