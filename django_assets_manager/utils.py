@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import os
 
-from PIL import Image
 from copy import deepcopy
 from django.conf import settings
 
@@ -100,6 +99,7 @@ class Packer:
 
 class SpriteGenerator:
 	def __init__(self, filename, size, pixel_ratio):
+		from PIL import Image
 		self.filename = filename
 		self.size = size
 		self.pixel_ratio = pixel_ratio
@@ -111,6 +111,7 @@ class SpriteGenerator:
 		self.out_image.save(to_localfile(self.filename))
 
 	def paste_image(self, image):
+		from PIL import Image
 		in_image = Image.open(to_localfile(image['src']))
 		if image['mode'] == 'no-repeat':
 			self.out_image.paste(in_image, (image['pos'][0] * self.pixel_ratio, image['pos'][1] * self.pixel_ratio))
@@ -160,6 +161,7 @@ class SpriteCompiler:
 			self.pack_sprites(sprite_def)
 
 	def pack_sprites(self, sprites):
+		from PIL import Image
 		sizes = ((1, ''),)
 		sizes += tuple(sprites.get('extra_sizes', ()))
 
