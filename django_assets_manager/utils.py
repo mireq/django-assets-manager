@@ -117,11 +117,11 @@ class SpriteGenerator:
 			self.out_image.paste(in_image, (image['pos'][0] * self.pixel_ratio, image['pos'][1] * self.pixel_ratio))
 		elif image['mode'] == 'repeat-x':
 			w = image['width']
-			for i in range((self.size[0] + w - 1) / w):
+			for i in range((self.size[0] + w - 1) // w):
 				self.out_image.paste(in_image, (i * w * self.pixel_ratio, image['pos'][1] * self.pixel_ratio))
 		elif image['mode'] == 'repeat-y':
 			h = image['height']
-			for i in range((self.size[1] + h - 1) / h):
+			for i in range((self.size[1] + h - 1) // h):
 				self.out_image.paste(in_image, (image['pos'][0] * self.pixel_ratio, i * h * self.pixel_ratio))
 
 	def generate_scss(self, sprites, sprite_configs):
