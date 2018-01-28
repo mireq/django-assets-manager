@@ -110,7 +110,11 @@ def get_simple_asset_sources(asset, asset_type):
 
 def get_or_create_unused_assets(context, asset_type):
 	if not "request" in context:
-		context["request"] = FakeRequest()
+		extra = {'request': FakeRequest()}
+		if hasattr(context, 'update'):
+			context.update(extra)
+		else:
+			context.vars.update(extra)
 	if hasattr(context["request"], "unused_" + asset_type):
 		return getattr(context["request"], "unused_" + asset_type)
 	else:
