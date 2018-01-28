@@ -140,3 +140,14 @@ def assets_css(context, *asset_list):
 @register.simple_tag(takes_context=True)
 def assets(context, *asset_list):
 	return mark_safe(assets_css(context, *asset_list) + assets_js(context, *asset_list))
+
+
+try:
+	from django_jinja import library
+	from jinja2 import contextfunction
+
+	library.global_function(contextfunction(assets_js))
+	library.global_function(contextfunction(assets_css))
+	library.global_function(contextfunction(assets))
+except ImportError:
+	pass
