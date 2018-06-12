@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.utils.html import format_html
 import traceback
 from copy import deepcopy
 
@@ -13,7 +14,7 @@ from django.utils.safestring import mark_safe
 from six.moves import zip_longest
 
 from ..finders import CdnFinder
-from ..settings import ASSETS
+from ..settings import ASSETS, USE_TEMPLATES
 
 
 register = template.Library()
@@ -72,7 +73,19 @@ ASSETS = deepcopy(ASSETS)
 ASSETS = {n: convert_asset_data(n, v) for n, v in ASSETS.items()}
 
 
-def get_asset_sources(asset, unused, asset_type):
+def render_css(context):
+	return ''.join(format_html('<link rel="stylesheet" href="{}" />', css) for css, __ in context['data'])
+
+
+def render_attributes(attributes):
+	return ''.join(format_html(' {}={}', key, value) for key, value in attributes)
+
+
+def render_js(context):
+	return ''.join(format_html('<script src="{}" type="text/javascript" charset="utf-8"{}></script>', src, render_attributes(attributes)) for src, attributes in context['data'])
+
+
+def get_asset_sources(asset, unused, asset_type, render):
 	if not asset in unused:
 		if not asset in ASSETS:
 			raise ImproperlyConfigured("Asset %s not registered" % asset)
@@ -83,17 +96,17 @@ def get_asset_sources(asset, unused, asset_type):
 
 	sources = []
 	for depend in asset_data["depends"]:
-		sources += get_asset_sources(depend, unused, asset_type)
+		sources += get_asset_sources(depend, unused, asset_type, render)
 
 	if asset_data[asset_type]:
 		context = {
 			"data": asset_data[asset_type],
 		}
-		sources.append(render_to_string("assets_manager/" + asset_type + ".html", context))
+		sources.append(render(context))
 	return sources
 
 
-def get_simple_asset_sources(asset, asset_type):
+def get_simple_asset_sources(asset, asset_type, render):
 	if not asset in ASSETS:
 		raise ImproperlyConfigured("Asset %s not registered" % asset)
 
@@ -126,8 +139,16 @@ def get_or_create_unused_assets(context, asset_type):
 def assets_by_type(context, asset_type, *asset_list):
 	unused = get_or_create_unused_assets(context, asset_type)
 	asset_sources = []
+	if USE_TEMPLATES or asset_type not in ('css', 'js'):
+		render = lambda context: render_to_string("assets_manager/" + asset_type + ".html", context)
+	else:
+		render = render_css if asset_type == 'css' else render_js
+
 	for asset in asset_list:
-		asset_sources += get_asset_sources(asset, unused, asset_type)
+		if USE_TEMPLATES or asset_type not in ('css', 'js'):
+			asset_sources += get_asset_sources(asset, unused, asset_type, render)
+		else:
+			asset_sources += get_asset_sources(asset, unused, asset_type, render)
 	return "".join(asset_sources)
 
 
