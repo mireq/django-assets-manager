@@ -83,7 +83,7 @@ class Packer:
 
 		w, h = size
 		root_w, root_h = root['size']
-		if (w - 1) <= root_w and (h - 1) <= root_h:
+		if w <= root_w and h <= root_h:
 			return root
 
 		return None
