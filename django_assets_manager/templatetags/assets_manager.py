@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-from django.utils.html import format_html
 import traceback
 from copy import deepcopy
+from itertools import zip_longest
 
 from django import template
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
-from django.utils import six
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from six.moves import zip_longest
 
 from ..finders import CdnFinder
 from ..settings import ASSETS, USE_TEMPLATES
@@ -49,13 +46,13 @@ def convert_asset_data(name, asset):
 	asset.setdefault("depends", [])
 
 	asset.setdefault("css", [])
-	if isinstance(asset["css"], six.string_types):
+	if isinstance(asset["css"], str):
 		asset["css"] = [asset["css"]]
 	asset['css'] = [transform_static(path) for path in asset['css']]
 	asset['css'] = finder.transform_to_cache(name, asset['css'])
 
 	asset.setdefault("js", [])
-	if isinstance(asset["js"], six.string_types):
+	if isinstance(asset["js"], str):
 		asset["js"] = [asset["js"]]
 	asset['js'] = [transform_static(path) for path in asset['js']]
 	asset['js'] = finder.transform_to_cache(name, asset['js'])
