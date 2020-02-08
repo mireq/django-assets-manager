@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import traceback
 from copy import deepcopy
-from itertools import zip_longest
+from itertools import chain, zip_longest
 
 from django import template
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
-from django.utils.html import format_html
+from django.utils import six
+from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 
 from ..finders import CdnFinder
@@ -50,19 +51,22 @@ def convert_asset_data(name, asset):
 		asset["css"] = [asset["css"]]
 	asset['css'] = [transform_static(path) for path in asset['css']]
 	asset['css'] = finder.transform_to_cache(name, asset['css'])
+	asset['css'] = [escape(item) for item in asset['css']]
 
 	asset.setdefault("js", [])
 	if isinstance(asset["js"], str):
 		asset["js"] = [asset["js"]]
 	asset['js'] = [transform_static(path) for path in asset['js']]
 	asset['js'] = finder.transform_to_cache(name, asset['js'])
+	asset['js'] = [escape(item) for item in asset['js']]
 
 	asset.setdefault("attributes", [])
 	if isinstance(asset["attributes"], dict):
 		asset["attributes"] = [asset["attributes"]]
+	asset['attributes'] = [render_attributes(item) for item in asset['attributes']]
 
-	asset["css"] = list(zip_longest(asset['css'], asset['attributes'], fillvalue=[]))
-	asset["js"] = list(zip_longest(asset['js'], asset['attributes'], fillvalue=[]))
+	asset["css"] = list(zip_longest(asset['css'], asset['attributes'], fillvalue=''))
+	asset["js"] = list(zip_longest(asset['js'], asset['attributes'], fillvalue=''))
 	return asset
 
 
@@ -71,7 +75,7 @@ ASSETS = {n: convert_asset_data(n, v) for n, v in ASSETS.items()}
 
 
 def render_css(context):
-	return ''.join(format_html('<link rel="stylesheet" href="{}" />', css) for css, __ in context['data'])
+	return ''.join(f'<link rel="stylesheet" href="{css}" />' for css, __ in context['data'])
 
 
 def render_attributes(attributes):
@@ -79,14 +83,14 @@ def render_attributes(attributes):
 
 
 def render_js(context):
-	return ''.join(format_html('<script src="{}" type="text/javascript" charset="utf-8"{}></script>', src, render_attributes(attributes)) for src, attributes in context['data'])
+	return ''.join(f'<script src="{src}" type="text/javascript" charset="utf-8"{attributes}></script>' for src, attributes in context['data'])
 
 
 def get_asset_sources(asset, unused, asset_type, render):
 	if not asset in unused:
 		if not asset in ASSETS:
 			raise ImproperlyConfigured("Asset %s not registered" % asset)
-		return []
+		return ()
 
 	asset_data = ASSETS[asset]
 	unused.remove(asset)
@@ -96,10 +100,7 @@ def get_asset_sources(asset, unused, asset_type, render):
 		sources += get_asset_sources(depend, unused, asset_type, render)
 
 	if asset_data[asset_type]:
-		context = {
-			"data": asset_data[asset_type],
-		}
-		sources.append(render(context))
+		sources.append(render({'data': asset_data[asset_type]}))
 	return sources
 
 
@@ -114,7 +115,7 @@ def get_simple_asset_sources(asset, asset_type, render):
 		context = {
 			"data": asset_data[asset_type],
 		}
-		sources.append(render_to_string("assets_manager/" + asset_type + ".html", context))
+		sources.append(render(context))
 	return sources
 
 
@@ -135,18 +136,12 @@ def get_or_create_unused_assets(context, asset_type):
 
 def assets_by_type(context, asset_type, *asset_list):
 	unused = get_or_create_unused_assets(context, asset_type)
-	asset_sources = []
 	if USE_TEMPLATES or asset_type not in ('css', 'js'):
 		render = lambda context: render_to_string("assets_manager/" + asset_type + ".html", context)
 	else:
 		render = render_css if asset_type == 'css' else render_js
 
-	for asset in asset_list:
-		if USE_TEMPLATES or asset_type not in ('css', 'js'):
-			asset_sources += get_asset_sources(asset, unused, asset_type, render)
-		else:
-			asset_sources += get_asset_sources(asset, unused, asset_type, render)
-	return "".join(asset_sources)
+	return ''.join(chain(*(get_asset_sources(asset, unused, asset_type, render) for asset in asset_list)))
 
 
 @register.simple_tag(takes_context=True)
