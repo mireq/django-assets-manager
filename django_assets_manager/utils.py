@@ -2,11 +2,11 @@
 import os
 
 from copy import deepcopy
-from django.conf import settings
+from django.contrib.staticfiles import finders
 
 
 def to_localfile(path):
-	return os.path.join(settings.STATICFILES_DIRS[0], *path.split('/'))
+	return finders.find(path)
 
 
 class NoSpaceError(RuntimeError):
