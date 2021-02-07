@@ -3,10 +3,15 @@ import os
 
 from copy import deepcopy
 from django.contrib.staticfiles import finders
+from django.conf import settings
+
+
+def find_file(path):
+	return finders.find(path)
 
 
 def to_localfile(path):
-	return finders.find(path)
+	return os.path.join(settings.STATICFILES_DIRS[0], *path.split('/'))
 
 
 class NoSpaceError(RuntimeError):
@@ -110,7 +115,7 @@ class SpriteGenerator:
 
 	def paste_image(self, image):
 		from PIL import Image
-		in_image = Image.open(to_localfile(image['src']))
+		in_image = Image.open(find_file(image['src']))
 		if image['mode'] == 'no-repeat':
 			self.out_image.paste(in_image, (image['pos'][0] * self.pixel_ratio, image['pos'][1] * self.pixel_ratio))
 		elif image['mode'] == 'repeat-x':
@@ -165,7 +170,7 @@ class SpriteCompiler:
 
 		for img in sprites['images']:
 			if not 'width' in img or not 'height' in img:
-				(width, height) = Image.open(to_localfile(img['src'])).size
+				(width, height) = Image.open(find_file(img['src'])).size
 				img['width'] = width
 				img['height'] = height
 
@@ -199,7 +204,7 @@ class SpriteCompiler:
 
 	def get_mtime(self, filename):
 		try:
-			return os.path.getmtime(to_localfile(filename))
+			return os.path.getmtime(filename)
 		except OSError:
 			return None
 
@@ -213,8 +218,8 @@ class SpriteCompiler:
 			for size, suffix in sizes:
 				sprite_conf = self.preprocess_pixel_ratio(sprite_def, (size, suffix))
 				dependencies[sprite_conf['output']] = {
-					'ts': self.get_mtime(sprite_conf['output']),
-					'dep': [(img['src'], self.get_mtime(img['src'])) for img in sprite_conf['images']],
+					'ts': self.get_mtime(to_localfile(sprite_conf['output'])),
+					'dep': [(img['src'], self.get_mtime(find_file(img['src']))) for img in sprite_conf['images']],
 				}
 
 		return dependencies
