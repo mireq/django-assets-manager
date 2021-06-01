@@ -162,7 +162,7 @@ try:
 	from django_jinja import library
 	try:
 		from jinja2 import pass_context
-	except ImportError
+	except ImportError:
 		from jinja2 import contextfunction as pass_context
 
 	library.global_function(pass_context(assets_js))
