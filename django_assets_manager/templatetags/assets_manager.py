@@ -160,10 +160,13 @@ def assets(context, *asset_list):
 
 try:
 	from django_jinja import library
-	from jinja2 import contextfunction
+	try:
+		from jinja2 import pass_context
+	except ImportError
+		from jinja2 import contextfunction as pass_context
 
-	library.global_function(contextfunction(assets_js))
-	library.global_function(contextfunction(assets_css))
-	library.global_function(contextfunction(assets))
+	library.global_function(pass_context(assets_js))
+	library.global_function(pass_context(assets_css))
+	library.global_function(pass_context(assets))
 except ImportError:
 	pass
