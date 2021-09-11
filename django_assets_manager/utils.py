@@ -22,7 +22,7 @@ class Packer:
 	def __init__(self, width, height):
 		self.root = {
 			'pos': (0, 0),
-			'size': (width, height),
+			'size': (width + 1, height + 1), # 1px gap
 			'used': False,
 			'down': None,
 			'right': None
@@ -52,7 +52,7 @@ class Packer:
 				self.fit_block(block)
 
 	def fit_block(self, block):
-		size = (block['width'] + 1, block['height'] + 1) # 1px medzera pre vyhladzovanie
+		size = (block['width'] + 1, block['height'] + 1) # 1px gap
 		node = self.find_node(self.root, size)
 		if node is None:
 			raise NoSpaceError('Block %s' % block['name'])
@@ -66,16 +66,16 @@ class Packer:
 		if self.root['size'][1] < -1:
 			raise NoSpaceError('Block %s' % block['name'])
 
-		block['pos'] = (0, self.root['size'][1] + 1)
-		block['size'] = (self.root['size'][0], block['height'])
+		block['pos'] = (0, self.root['size'][1])
+		block['size'] = (self.root['size'][0] - 1, block['height'])
 
 	def fit_block_repeat_y(self, block):
 		self.root['size'] = (self.root['size'][0] - block['width'] - 1, self.root['size'][1])
 		if self.root['size'][0] < -1:
 			raise NoSpaceError('Block %s' % block['name'])
 
-		block['pos'] = (self.root['size'][0] + 1, 0)
-		block['size'] = (block['width'], self.root['size'][1])
+		block['pos'] = (self.root['size'][0], 0)
+		block['size'] = (block['width'], self.root['size'][1] - 1)
 
 	def find_node(self, root, size):
 		if not root:
