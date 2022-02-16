@@ -18,6 +18,10 @@ class NoSpaceError(RuntimeError):
 	pass
 
 
+class FileNotFoundError(RuntimeError):
+	pass
+
+
 class Packer:
 	def __init__(self, width, height):
 		self.root = {
@@ -170,7 +174,10 @@ class SpriteCompiler:
 
 		for img in sprites['images']:
 			if not 'width' in img or not 'height' in img:
-				(width, height) = Image.open(find_file(img['src'])).size
+				src_filename = find_file(img['src'])
+				if src_filename is None:
+					raise FileNotFoundError("File %s not found" % img['src'])
+				(width, height) = Image.open(src_filename).size
 				img['width'] = width
 				img['height'] = height
 
@@ -217,10 +224,16 @@ class SpriteCompiler:
 
 			for size, suffix in sizes:
 				sprite_conf = self.preprocess_pixel_ratio(sprite_def, (size, suffix))
+				deps = []
 				dependencies[sprite_conf['output']] = {
 					'ts': self.get_mtime(to_localfile(sprite_conf['output'])),
-					'dep': [(img['src'], self.get_mtime(find_file(img['src']))) for img in sprite_conf['images']],
+					'dep': deps,
 				}
+				for img in sprite_conf['images']:
+					src_filename = find_file(img['src'])
+					if src_filename is None:
+						raise FileNotFoundError("File %s not found" % img['src'])
+					deps.append((img['src'], self.get_mtime(find_file(img['src']))))
 
 		return dependencies
 
