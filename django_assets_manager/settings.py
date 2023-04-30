@@ -24,10 +24,6 @@ def transform_static(path):
 	return settings.STATIC_URL + path[9:]
 
 
-def render_attributes(attributes):
-	return ''.join(format_html(' {}={}', key, value) for key, value in attributes)
-
-
 def convert_asset_data(name, asset):
 	asset.setdefault("depends", [])
 
@@ -45,13 +41,8 @@ def convert_asset_data(name, asset):
 	asset['js'] = finder.transform_to_cache(name, asset['js'])
 	asset['js'] = [escape(item) for item in asset['js']]
 
-	asset.setdefault("attributes", [])
-	if isinstance(asset["attributes"], dict):
-		asset["attributes"] = [asset["attributes"]]
-	asset['attributes'] = [render_attributes(item) for item in asset['attributes']]
-
-	asset["css"] = list(zip_longest(asset['css'], asset['attributes'], fillvalue=''))
-	asset["js"] = list(zip_longest(asset['js'], asset['attributes'], fillvalue=''))
+	asset["css"] = list(zip_longest(asset['css'], {}, fillvalue=''))
+	asset["js"] = list(zip_longest(asset['js'], {}, fillvalue=''))
 	return asset
 
 

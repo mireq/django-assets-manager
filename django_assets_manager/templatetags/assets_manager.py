@@ -5,7 +5,6 @@ from itertools import chain
 from django import template
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
-from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from ..settings import ASSETS, USE_TEMPLATES
@@ -34,10 +33,6 @@ class FakeRequest(object):
 
 def render_css(context):
 	return ''.join(f'<link rel="stylesheet" href="{css}" />' for css, __ in context['data'])
-
-
-def render_attributes(attributes):
-	return ''.join(format_html(' {}={}', key, value) for key, value in attributes)
 
 
 def render_js(context):
