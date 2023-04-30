@@ -6,8 +6,8 @@ from django.contrib.staticfiles.finders import BaseFinder
 from django.contrib.staticfiles.utils import matches_patterns
 from django.core.files.storage import FileSystemStorage
 from six.moves.urllib.request import urlopen
+from django.utils.functional import cached_property
 
-from .settings import ASSETS
 
 
 class CdnFinder(BaseFinder):
@@ -15,11 +15,16 @@ class CdnFinder(BaseFinder):
 		super(CdnFinder, self).__init__(*args, **kwargs)
 		self.storage = FileSystemStorage(location=settings.STATICFILES_DIRS[0])
 
+	@cached_property
+	def settings(self):
+		from . import settings
+		return settings
+
 	def find(self, path, all=False): #pylint: disable=redefined-builtin
 		return []
 
 	def list(self, ignore_patterns):
-		for package, data in ASSETS.items():
+		for package, data in self.settings.ASSETS.items():
 			if "cache" in data:
 				for src, dest in data["cache"]["paths"].items():
 					dest = self.to_cache_path(package, dest)
@@ -37,7 +42,7 @@ class CdnFinder(BaseFinder):
 		return os.path.join('CACHE', package, dest)
 
 	def transform_and_check_path(self, package, path):
-		dest_cache = ASSETS.get(package, {}).get('cache', {}).get('paths', {})
+		dest_cache = self.settings.ASSETS.get(package, {}).get('cache', {}).get('paths', {})
 		if not path in dest_cache:
 			return path
 		dest = self.to_cache_path(package, dest_cache[path])

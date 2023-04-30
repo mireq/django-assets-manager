@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
 import traceback
-from copy import deepcopy
-from itertools import chain, zip_longest
+from itertools import chain
 
 from django import template
-from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import render_to_string
-from django.utils.html import escape, format_html
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
-from ..finders import CdnFinder
 from ..settings import ASSETS, USE_TEMPLATES
 
 
 register = template.Library()
-finder = CdnFinder()
 
 
 class ShadowRequest(object):
@@ -34,43 +30,6 @@ class FakeRequest(object):
 	def __setattr__(self, item, value):
 		fake = any(f[2] == 'render_nodelist' for f in traceback.extract_stack())
 		return setattr(self.__dict__['requests'][0 if fake else 1], item, value)
-
-
-def transform_static(path):
-	if path.find("static://") != 0:
-		return path
-	return settings.STATIC_URL + path[9:]
-
-
-def convert_asset_data(name, asset):
-	asset.setdefault("depends", [])
-
-	asset.setdefault("css", [])
-	if isinstance(asset["css"], str):
-		asset["css"] = [asset["css"]]
-	asset['css'] = [transform_static(path) for path in asset['css']]
-	asset['css'] = finder.transform_to_cache(name, asset['css'])
-	asset['css'] = [escape(item) for item in asset['css']]
-
-	asset.setdefault("js", [])
-	if isinstance(asset["js"], str):
-		asset["js"] = [asset["js"]]
-	asset['js'] = [transform_static(path) for path in asset['js']]
-	asset['js'] = finder.transform_to_cache(name, asset['js'])
-	asset['js'] = [escape(item) for item in asset['js']]
-
-	asset.setdefault("attributes", [])
-	if isinstance(asset["attributes"], dict):
-		asset["attributes"] = [asset["attributes"]]
-	asset['attributes'] = [render_attributes(item) for item in asset['attributes']]
-
-	asset["css"] = list(zip_longest(asset['css'], asset['attributes'], fillvalue=''))
-	asset["js"] = list(zip_longest(asset['js'], asset['attributes'], fillvalue=''))
-	return asset
-
-
-ASSETS = deepcopy(ASSETS)
-ASSETS = {n: convert_asset_data(n, v) for n, v in ASSETS.items()}
 
 
 def render_css(context):
