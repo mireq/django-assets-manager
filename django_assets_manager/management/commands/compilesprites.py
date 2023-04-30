@@ -6,7 +6,7 @@ from ...settings import SPRITES
 
 
 class Command(BaseCommand):
-	requires_system_checks = False
+	requires_system_checks = []
 
 	def handle(self, *args, **opions): #pylint: disable=unused-argument
 		compiler = utils.SpriteCompiler()
