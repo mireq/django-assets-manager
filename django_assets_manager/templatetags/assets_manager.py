@@ -41,7 +41,7 @@ def render_attributes(attributes):
 
 
 def render_js(context):
-	return ''.join(f'<script src="{src}" type="text/javascript" charset="utf-8"{attributes}></script>' for src, attributes in context['data'])
+	return ''.join(f'<script src="{src}"{attributes}></script>' for src, attributes in context['data'])
 
 
 def get_asset_sources(asset, unused, asset_type, render):
