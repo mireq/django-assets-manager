@@ -5,9 +5,8 @@ from django.conf import settings
 from django.contrib.staticfiles.finders import BaseFinder
 from django.contrib.staticfiles.utils import matches_patterns
 from django.core.files.storage import FileSystemStorage
-from six.moves.urllib.request import urlopen
 from django.utils.functional import cached_property
-
+from six.moves.urllib.request import urlopen
 
 
 class CdnFinder(BaseFinder):
@@ -17,8 +16,8 @@ class CdnFinder(BaseFinder):
 
 	@cached_property
 	def settings(self):
-		from . import settings
-		return settings
+		from . import settings as s
+		return s
 
 	def find(self, path, all=False): #pylint: disable=redefined-builtin
 		return []
