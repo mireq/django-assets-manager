@@ -18,7 +18,7 @@ class NoSpaceError(RuntimeError):
 	pass
 
 
-class FileNotFoundError(RuntimeError):
+class AssetNotFoundError(RuntimeError):
 	pass
 
 
@@ -176,7 +176,7 @@ class SpriteCompiler:
 			if not 'width' in img or not 'height' in img:
 				src_filename = find_file(img['src'])
 				if src_filename is None:
-					raise FileNotFoundError("File %s not found" % img['src'])
+					raise AssetNotFoundError("File %s not found" % img['src'])
 				(width, height) = Image.open(src_filename).size
 				img['width'] = width
 				img['height'] = height
@@ -232,7 +232,7 @@ class SpriteCompiler:
 				for img in sprite_conf['images']:
 					src_filename = find_file(img['src'])
 					if src_filename is None:
-						raise FileNotFoundError("File %s not found" % img['src'])
+						raise AssetNotFoundError("File %s not found" % img['src'])
 					deps.append((img['src'], self.get_mtime(find_file(img['src']))))
 
 		return dependencies
