@@ -62,7 +62,7 @@ def get_or_create_unused_assets(context, asset_type):
 		extra = {'request': FakeRequest()}
 		if hasattr(context, 'update'):
 			context.update(extra)
-		else:
+		else: # pragma: no cover
 			context.vars.update(extra)
 	if hasattr(context["request"], "unused_" + asset_type):
 		return getattr(context["request"], "unused_" + asset_type)
@@ -97,7 +97,7 @@ def assets(context, *asset_list):
 	return mark_safe(assets_css(context, *asset_list) + assets_js(context, *asset_list))
 
 
-try:
+try: # pragma: no cover
 	from django_jinja import library
 	try:
 		from jinja2 import pass_context
@@ -107,5 +107,5 @@ try:
 	library.global_function(pass_context(assets_js))
 	library.global_function(pass_context(assets_css))
 	library.global_function(pass_context(assets))
-except ImportError:
+except ImportError: # pragma: no cover
 	pass
