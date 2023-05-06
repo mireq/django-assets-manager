@@ -3,11 +3,18 @@ from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase, override_settings
 
 from django_assets_manager.templatetags.assets_manager import assets
+from jinja2.runtime import Context
+from django.template.loader import get_template
 
 
 class TestDependencies(TestCase):
 	def ctx(self):
 		return {}
+
+	def jinja_ctx(self):
+		tpl = get_template('index.html', using='jinja')
+		environment = tpl.backend.env
+		return Context(environment, parent={}, name='index.html', blocks={})
 
 	@override_settings(
 		ASSETS_MANAGER_FILES = {
@@ -31,6 +38,10 @@ class TestDependencies(TestCase):
 	)
 	def test_dont_repeat(self):
 		ctx = self.ctx()
+		assets(ctx, 'app')
+		self.assertEqual('', assets(ctx, 'app'))
+
+		ctx = self.jinja_ctx()
 		assets(ctx, 'app')
 		self.assertEqual('', assets(ctx, 'app'))
 

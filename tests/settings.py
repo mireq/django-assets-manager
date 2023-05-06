@@ -20,18 +20,22 @@ DATABASES = {
 
 TEMPLATES = [
 	{
-		"BACKEND": "django_jinja.backend.Jinja2",
+		'BACKEND': 'django_jinja.backend.Jinja2',
+		'NAME': 'jinja',
 		'DIRS': [BASE_DIR / 'templates' / 'jinja'],
-		"APP_DIRS": True,
-		"OPTIONS": {}
+		'APP_DIRS': False,
+		'OPTIONS': {
+			"match_extension": None,
+		}
 	},
 	{
 		'BACKEND': 'django.template.backends.django.DjangoTemplates',
+		'NAME': 'django',
 		'DIRS': [BASE_DIR / 'templates' / 'django'],
-		'APP_DIRS': True,
+		'APP_DIRS': False,
 		'OPTIONS': {
 			'context_processors': ['django.template.context_processors.request'],
-			'builtins': ['django_universal_paginator.templatetags.paginator_tags'],
+			'builtins': ['django_assets_manager.templatetags.assets_manager'],
 		},
 	},
 ]
