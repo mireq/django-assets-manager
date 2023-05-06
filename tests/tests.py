@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from django.test import TestCase
-from django.test import override_settings
+from django.core.exceptions import ImproperlyConfigured
+from django.test import TestCase, override_settings
+
 from django_assets_manager.templatetags.assets_manager import assets
 
 
@@ -54,3 +55,25 @@ class TestDependencies(TestCase):
 	)
 	def test_array(self):
 		self.assertEqual('<link rel="stylesheet" href="/static/1.css" /><link rel="stylesheet" href="/static/2.css" /><script src="/static/1.js"></script><script src="/static/2.js"></script>', assets(self.ctx(), 'app'))
+
+	@override_settings(
+		ASSETS_MANAGER_FILES = {
+		},
+	)
+	def test_throw_error(self):
+		with self.assertRaises(ImproperlyConfigured):
+			assets(self.ctx(), 'app')
+
+	@override_settings(
+		ASSETS_MANAGER_FILES = {
+			'dep': {
+				'js': ['static://1.js'],
+			},
+			'app': {
+				'js': ['static://2.js'],
+				'depends': ['dep'],
+			},
+		},
+	)
+	def test_dependencies(self):
+		self.assertEqual('<script src="/static/1.js"></script><script src="/static/2.js"></script>', assets(self.ctx(), 'app'))
