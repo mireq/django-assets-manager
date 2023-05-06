@@ -57,21 +57,6 @@ def get_asset_sources(asset, unused, asset_type, render):
 	return sources
 
 
-def get_simple_asset_sources(asset, asset_type, render):
-	if not asset in ASSETS:
-		raise ImproperlyConfigured("Asset %s not registered" % asset)
-
-	asset_data = ASSETS[asset]
-	sources = []
-
-	if asset_data[asset_type]:
-		context = {
-			"data": asset_data[asset_type],
-		}
-		sources.append(render(context))
-	return sources
-
-
 def get_or_create_unused_assets(context, asset_type):
 	if not "request" in context:
 		extra = {'request': FakeRequest()}
