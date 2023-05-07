@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 import os
-
 from copy import deepcopy
-from django.contrib.staticfiles import finders
+from pathlib import Path
+
 from django.conf import settings
+from django.contrib.staticfiles import finders
 
 
 def find_file(path):
 	return finders.find(path)
 
 
-def to_localfile(path):
-	return os.path.join(settings.STATICFILES_DIRS[0], *path.split('/'))
+def to_localfile(path) -> Path:
+	return Path.joinpath(Path(settings.STATICFILES_DIRS[0]), path)
 
 
 class NoSpaceError(RuntimeError):
@@ -115,7 +116,9 @@ class SpriteGenerator:
 	def generate(self, images):
 		for img in images:
 			self.paste_image(img)
-		self.out_image.save(to_localfile(self.filename))
+		output_filename = to_localfile(self.filename)
+		output_filename.parent.mkdir(parents=True, exist_ok=True)
+		self.out_image.save(output_filename)
 
 	def paste_image(self, image):
 		from PIL import Image
