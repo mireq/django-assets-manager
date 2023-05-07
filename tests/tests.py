@@ -1,13 +1,32 @@
 # -*- coding: utf-8 -*-
+import os
+import shutil
+from datetime import datetime
+from pathlib import Path
+
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.core.management import call_command
 from django.template.loader import get_template
 from django.test import TestCase, override_settings
 from jinja2.runtime import Context
 
+from django_assets_manager.checks import check_generated
 from django_assets_manager.templatetags.assets_manager import assets, assets_by_type
 
 
-class TestDependencies(TestCase):
+def get_static_path(path: str) -> Path:
+	static_dir = Path(settings.STATICFILES_DIRS[0])
+	return Path.joinpath(static_dir, path)
+
+
+def clear_generated_static_files():
+	generated_dir = get_static_path('generated')
+	if generated_dir.exists():
+		shutil.rmtree(generated_dir)
+
+
+class TestAssets(TestCase):
 	def ctx(self):
 		return {}
 
@@ -98,3 +117,49 @@ class TestDependencies(TestCase):
 	)
 	def test_custom_type(self):
 		self.assertEqual('Custom: custom.script', assets_by_type(self.ctx(), 'custom', 'app').strip())
+
+
+class TestChecks(TestCase):
+	def setUp(self):
+		clear_generated_static_files()
+
+	@classmethod
+	def tearDownClass(cls):
+		clear_generated_static_files()
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'generated/sprites.png',
+				'scss_output': 'generated/sprites.scss',
+				'extra_sizes': ((2, '@2x'),),
+				'width': 640,
+				'height': 640,
+				'images': (
+					{
+						'name': 'img',
+						'src': 'img.png',
+					},
+				),
+			},
+		],
+	)
+	def test_recompilation_needed(self):
+		# not generated
+		errors = check_generated()
+		self.assertEqual(1, len(errors))
+
+		# now call generate sprites
+		call_command('compilesprites')
+		errors = check_generated()
+		self.assertEqual(0, len(errors))
+
+		# now pretend, that generated file is order
+		older_time = int(datetime.now().timestamp()) - 100000
+		generated_file = get_static_path('generated/sprites.png')
+		os.utime(generated_file, (older_time, older_time))
+
+		# check again
+		errors = check_generated()
+		self.assertEqual(1, len(errors))
