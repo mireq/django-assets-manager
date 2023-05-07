@@ -5,13 +5,13 @@ from itertools import zip_longest
 from django.conf import settings
 from django.dispatch import receiver
 from django.test.signals import setting_changed
-from django.utils.html import escape, format_html
+from django.utils.html import escape
 
 from .finders import CdnFinder
 
 
 ASSETS = getattr(settings, 'ASSETS_MANAGER_FILES', {})
-SPRITES = getattr(settings, 'ASSETS_MANAGER_SPRITES', ())
+SPRITES = list(getattr(settings, 'ASSETS_MANAGER_SPRITES', []))
 USE_TEMPLATES = getattr(settings, 'ASSETS_MANAGER_USE_TEMPLATES', False)
 
 
@@ -49,11 +49,14 @@ def convert_asset_data(name, asset):
 @receiver(setting_changed)
 def update_settings(**kwargs):
 	setting = kwargs.get('setting')
-	if setting is not None and setting != 'ASSETS_MANAGER_FILES':
+	if setting is not None and setting not in {'ASSETS_MANAGER_FILES', 'ASSETS_MANAGER_SPRITES'}:
 		return
 	assets = deepcopy(getattr(settings, 'ASSETS_MANAGER_FILES', {}))
+	sprites = deepcopy(list(getattr(settings, 'ASSETS_MANAGER_SPRITES', [])))
 	ASSETS.clear()
 	ASSETS.update({n: convert_asset_data(n, v) for n, v in assets.items()})
+	SPRITES.clear()
+	SPRITES.extend(sprites)
 
 
 update_settings()
