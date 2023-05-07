@@ -51,12 +51,18 @@ def update_settings(**kwargs):
 	setting = kwargs.get('setting')
 	if setting is not None and setting not in {'ASSETS_MANAGER_FILES', 'ASSETS_MANAGER_SPRITES'}:
 		return
-	assets = deepcopy(getattr(settings, 'ASSETS_MANAGER_FILES', {}))
 	sprites = deepcopy(list(getattr(settings, 'ASSETS_MANAGER_SPRITES', [])))
-	ASSETS.clear()
-	ASSETS.update({n: convert_asset_data(n, v) for n, v in assets.items()})
 	SPRITES.clear()
 	SPRITES.extend(sprites)
+
+	assets = deepcopy(getattr(settings, 'ASSETS_MANAGER_FILES', {}))
+	ASSETS.clear()
+	ASSETS.update({n: v for n, v in assets.items()}) # cache is used in convert_asset_data
+	ASSETS.update({n: convert_asset_data(n, v) for n, v in assets.items()})
+	# download assets
+	list(finder.list(ignore_patterns=[]))
+	assets = deepcopy(getattr(settings, 'ASSETS_MANAGER_FILES', {}))
+	ASSETS.update({n: convert_asset_data(n, v) for n, v in assets.items()})
 
 
 update_settings()

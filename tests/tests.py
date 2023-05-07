@@ -4,6 +4,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+import httpretty
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
@@ -20,13 +21,13 @@ def get_static_path(path: str) -> Path:
 	return Path.joinpath(static_dir, path)
 
 
-def clear_generated_static_files():
-	generated_dir = get_static_path('generated')
+def clear_cached_static_files():
+	generated_dir = get_static_path('CACHE')
 	if generated_dir.exists():
 		shutil.rmtree(generated_dir)
 
 
-class TestAssets(TestCase):
+class TemplateContextMixin(object):
 	def ctx(self):
 		return {}
 
@@ -35,6 +36,8 @@ class TestAssets(TestCase):
 		environment = tpl.backend.env
 		return Context(environment, parent={}, name='index.html', blocks={})
 
+
+class TestAssets(TemplateContextMixin, TestCase):
 	@override_settings(
 		ASSETS_MANAGER_FILES = {
 			'app': {
@@ -121,18 +124,18 @@ class TestAssets(TestCase):
 
 class TestChecks(TestCase):
 	def setUp(self):
-		clear_generated_static_files()
+		clear_cached_static_files()
 
 	@classmethod
 	def tearDownClass(cls):
-		clear_generated_static_files()
+		clear_cached_static_files()
 
 	@override_settings(
 		ASSETS_MANAGER_SPRITES = [
 			{
 				'name': 'main',
-				'output': 'generated/sprites.png',
-				'scss_output': 'generated/sprites.scss',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
 				'extra_sizes': ((2, '@2x'),),
 				'width': 640,
 				'height': 640,
@@ -157,9 +160,61 @@ class TestChecks(TestCase):
 
 		# now pretend, that generated file is order
 		older_time = int(datetime.now().timestamp()) - 100000
-		generated_file = get_static_path('generated/sprites.png')
+		generated_file = get_static_path('CACHE/sprites.png')
 		os.utime(generated_file, (older_time, older_time))
 
 		# check again
 		errors = check_generated()
 		self.assertEqual(1, len(errors))
+
+
+class TestCdnFinder(TemplateContextMixin, TestCase):
+	def setUp(self):
+		clear_cached_static_files()
+
+	@classmethod
+	def tearDownClass(cls):
+		clear_cached_static_files()
+
+	@override_settings(
+		ASSETS_MANAGER_FILES = {
+			'app': {
+				'js': '//external.com/script.js',
+			},
+		},
+	)
+	def test_get_external_files(self):
+		self.assertEqual('<script src="//external.com/script.js"></script>', assets(self.ctx(), 'app'))
+
+	@httpretty.activate
+	def test_cached_external_file(self):
+		httpretty.register_uri(httpretty.GET, "http://external.com/script.js", body="")
+		httpretty.register_uri(httpretty.GET, "http://external.com/script2.js", body="")
+		with override_settings(
+			ASSETS_MANAGER_FILES = {
+				'app': {
+					'js': 'http://external.com/script.js',
+					'cache': {
+						'paths': {
+							'http://external.com/script.js': 'script.js',
+						}
+					},
+				},
+			},
+		):
+			self.assertEqual('<script src="/static/CACHE/app/script.js"></script>', assets(self.ctx(), 'app'))
+		# same request without http prefix
+		with override_settings(
+			ASSETS_MANAGER_FILES = {
+				'app': {
+					'js': ['http://external.com/script.js', '//external.com/script2.js'],
+					'cache': {
+						'paths': {
+							'http://external.com/script.js': 'script.js',
+							'//external.com/script2.js': 'script2.js',
+						}
+					},
+				},
+			},
+		):
+			self.assertEqual('<script src="/static/CACHE/app/script.js"></script><script src="/static/CACHE/app/script2.js"></script>', assets(self.ctx(), 'app'))

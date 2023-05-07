@@ -18,6 +18,11 @@ DATABASES = {
 	}
 }
 
+STATICFILES_FINDERS = (
+	'django.contrib.staticfiles.finders.FileSystemFinder',
+	'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+	'django_assets_manager.finders.CdnFinder',
+)
 TEMPLATES = [
 	{
 		'BACKEND': 'django_jinja.backend.Jinja2',
