@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from django.core.exceptions import ImproperlyConfigured
-from django.test import TestCase, override_settings
-
-from django_assets_manager.templatetags.assets_manager import assets
-from jinja2.runtime import Context
 from django.template.loader import get_template
+from django.test import TestCase, override_settings
+from jinja2.runtime import Context
+
+from django_assets_manager.templatetags.assets_manager import assets, assets_by_type
 
 
 class TestDependencies(TestCase):
@@ -88,3 +88,13 @@ class TestDependencies(TestCase):
 	)
 	def test_dependencies(self):
 		self.assertEqual('<script src="/static/1.js"></script><script src="/static/2.js"></script>', assets(self.ctx(), 'app'))
+
+	@override_settings(
+		ASSETS_MANAGER_FILES = {
+			'app': {
+				'custom': ['custom.script'],
+			},
+		},
+	)
+	def test_custom_type(self):
+		self.assertEqual('Custom: custom.script', assets_by_type(self.ctx(), 'custom', 'app').strip())
