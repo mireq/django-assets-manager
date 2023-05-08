@@ -472,3 +472,47 @@ class TestCompilesprites(TemplateContextMixin, TestCase):
 	def test_not_found(self):
 		with self.assertRaises(AssetNotFoundError):
 			call_command('compilesprites')
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 2,
+				'height': 2,
+				'images': (
+					{'name': '1','src': 'CACHE/1.png', 'mode': 'repeat-x'},
+					{'name': '2','src': 'CACHE/2.png', 'mode': 'repeat-x'},
+				),
+			},
+		],
+	)
+	def test_repeat_x_no_space(self):
+		self.create_image(f'CACHE/1.png', width=1, height=1)
+		self.create_image(f'CACHE/2.png', width=1, height=1)
+		with self.assertRaises(NoSpaceError):
+			call_command('compilesprites')
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 2,
+				'height': 2,
+				'images': (
+					{'name': '1','src': 'CACHE/1.png', 'mode': 'repeat-y'},
+					{'name': '2','src': 'CACHE/2.png', 'mode': 'repeat-y'},
+				),
+			},
+		],
+	)
+	def test_repeat_y_no_space(self):
+		self.create_image(f'CACHE/1.png', width=1, height=1)
+		self.create_image(f'CACHE/2.png', width=1, height=1)
+		with self.assertRaises(NoSpaceError):
+			call_command('compilesprites')
