@@ -68,7 +68,7 @@ class Packer:
 
 	def fit_block_repeat_x(self, block):
 		self.root['size'] = (self.root['size'][0], self.root['size'][1] - block['height'] - 1)
-		if self.root['size'][1] < -1:
+		if self.root['size'][1] <= -1:
 			raise NoSpaceError('Block %s' % block['name'])
 
 		block['pos'] = (0, self.root['size'][1])
@@ -76,7 +76,7 @@ class Packer:
 
 	def fit_block_repeat_y(self, block):
 		self.root['size'] = (self.root['size'][0] - block['width'] - 1, self.root['size'][1])
-		if self.root['size'][0] < -1:
+		if self.root['size'][0] <= -1:
 			raise NoSpaceError('Block %s' % block['name'])
 
 		block['pos'] = (self.root['size'][0], 0)
