@@ -344,3 +344,90 @@ class TestCompilesprites(TemplateContextMixin, TestCase):
 		for i in range(4):
 			self.create_image(f'CACHE/{i}.png', width=1, height=1)
 		call_command('compilesprites')
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 3,
+				'height': 3,
+				'images': (
+					{'name': 'normal','src': 'CACHE/normal.png'},
+					{'name': 'repeat','src': 'CACHE/repeat.png', 'mode': 'repeat-x'},
+				),
+			},
+		],
+	)
+	def test_repeat_x(self):
+		self.create_image(f'CACHE/normal.png', width=1, height=1)
+		self.create_image(f'CACHE/repeat.png', width=1, height=1)
+		call_command('compilesprites')
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 3,
+				'height': 3,
+				'images': (
+					{'name': 'normal','src': 'CACHE/normal.png'},
+					{'name': 'repeat','src': 'CACHE/repeat.png', 'mode': 'repeat-y'},
+				),
+			},
+		],
+	)
+	def test_repeat_y(self):
+		self.create_image(f'CACHE/normal.png', width=1, height=1)
+		self.create_image(f'CACHE/repeat.png', width=1, height=1)
+		call_command('compilesprites')
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 3,
+				'height': 3,
+				'images': (
+					{'name': 'normal','src': 'CACHE/normal.png', 'mode': 'repeat-y'},
+					{'name': 'repeat','src': 'CACHE/repeat.png', 'mode': 'repeat-x'},
+				),
+			},
+		],
+	)
+	def test_repeat_x_combined(self):
+		self.create_image(f'CACHE/normal.png', width=2, height=2)
+		self.create_image(f'CACHE/repeat.png', width=1, height=1)
+		with self.assertRaises(NoSpaceError):
+			call_command('compilesprites')
+
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 3,
+				'height': 3,
+				'images': (
+					{'name': 'normal','src': 'CACHE/normal.png', 'mode': 'repeat-x'},
+					{'name': 'repeat','src': 'CACHE/repeat.png', 'mode': 'repeat-y'},
+				),
+			},
+		],
+	)
+	def test_repeat_y_combined(self):
+		self.create_image(f'CACHE/normal.png', width=2, height=2)
+		self.create_image(f'CACHE/repeat.png', width=1, height=1)
+		with self.assertRaises(NoSpaceError):
+			call_command('compilesprites')
