@@ -432,7 +432,6 @@ class TestCompilesprites(TemplateContextMixin, TestCase):
 		with self.assertRaises(NoSpaceError):
 			call_command('compilesprites')
 
-
 	@override_settings(
 		ASSETS_MANAGER_SPRITES = [
 			{
@@ -453,4 +452,23 @@ class TestCompilesprites(TemplateContextMixin, TestCase):
 		self.create_image(f'CACHE/normal.png', width=2, height=2)
 		self.create_image(f'CACHE/repeat.png', width=1, height=1)
 		with self.assertRaises(NoSpaceError):
+			call_command('compilesprites')
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 1,
+				'height': 1,
+				'images': (
+					{'name': 'notfound','src': 'CACHE/notfound.png'},
+				),
+			},
+		],
+	)
+	def test_not_found(self):
+		with self.assertRaises(AssetNotFoundError):
 			call_command('compilesprites')
