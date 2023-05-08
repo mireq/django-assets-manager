@@ -273,6 +273,29 @@ class TestCompilesprites(TemplateContextMixin, TestCase):
 		self.create_image('CACHE/src.png', width=1, height=1)
 		call_command('compilesprites')
 
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 1,
+				'height': 1,
+				'images': (
+					{
+						'name': 'src.png',
+						'src': 'CACHE/src.png',
+						'width': 1,
+						'height': 1,
+					},
+				),
+			},
+		],
+	)
+	def test_defined_size(self):
+		self.create_image('CACHE/src.png', width=1, height=1)
+		call_command('compilesprites')
 
 	@override_settings(
 		ASSETS_MANAGER_SPRITES = [
