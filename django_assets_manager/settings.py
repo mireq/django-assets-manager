@@ -10,8 +10,8 @@ from django.utils.html import escape
 from .finders import CdnFinder
 
 
-ASSETS = getattr(settings, 'ASSETS_MANAGER_FILES', {})
-SPRITES = list(getattr(settings, 'ASSETS_MANAGER_SPRITES', []))
+ASSETS = deepcopy(getattr(settings, 'ASSETS_MANAGER_FILES', {}))
+SPRITES = deepcopy(list(getattr(settings, 'ASSETS_MANAGER_SPRITES', [])))
 USE_TEMPLATES = getattr(settings, 'ASSETS_MANAGER_USE_TEMPLATES', False)
 
 
@@ -62,6 +62,7 @@ def update_settings(**kwargs):
 	# download assets
 	list(finder.list(ignore_patterns=[]))
 	assets = deepcopy(getattr(settings, 'ASSETS_MANAGER_FILES', {}))
+	ASSETS.update({n: v for n, v in assets.items()})
 	ASSETS.update({n: convert_asset_data(n, v) for n, v in assets.items()})
 
 
