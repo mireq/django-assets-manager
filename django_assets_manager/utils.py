@@ -83,8 +83,8 @@ class Packer:
 		block['size'] = (block['width'], self.root['size'][1] - 1)
 
 	def find_node(self, root, size):
-		if not root:
-			return None
+		#if not root:
+		#	return None
 
 		if root['used']:
 			return self.find_node(root['right'], size) or self.find_node(root['down'], size)
