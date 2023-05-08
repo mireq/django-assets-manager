@@ -12,6 +12,7 @@ from django.template.loader import get_template
 from django.test import TestCase, override_settings
 from jinja2.runtime import Context
 
+from PIL import Image
 from django_assets_manager.checks import check_generated
 from django_assets_manager.templatetags.assets_manager import assets, assets_by_type
 
@@ -218,3 +219,33 @@ class TestCdnFinder(TemplateContextMixin, TestCase):
 			},
 		):
 			self.assertEqual('<script src="/static/CACHE/app/script.js"></script><script src="/static/CACHE/app/script2.js"></script>', assets(self.ctx(), 'app'))
+
+
+class TestCompilesprites(TemplateContextMixin, TestCase):
+	def create_image(self, path: str, width: int, height: int):
+		image_path = get_static_path(path)
+		image_path.parent.mkdir(exist_ok=True, parents=True)
+		img = Image.new('RGB', (width, height))
+		img.save(image_path)
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 10,
+				'height': 10,
+				'images': (
+					{
+						'name': 'src.png',
+						'src': 'CACHE/src.png',
+					},
+				),
+			},
+		],
+	)
+	def test_single_sprite(self):
+		self.create_image('CACHE/src.png', width=1, height=1)
+		call_command('compilesprites')
