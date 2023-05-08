@@ -14,7 +14,7 @@ from jinja2.runtime import Context
 
 from PIL import Image
 from django_assets_manager.checks import check_generated
-from django_assets_manager.utils import NoSpaceError
+from django_assets_manager.utils import NoSpaceError, AssetNotFoundError
 from django_assets_manager.templatetags.assets_manager import assets, assets_by_type
 
 
@@ -168,6 +168,28 @@ class TestChecks(TestCase):
 		# check again
 		errors = check_generated()
 		self.assertEqual(1, len(errors))
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 640,
+				'height': 640,
+				'images': (
+					{
+						'name': 'notfound',
+						'src': 'notfound.png',
+					},
+				),
+			},
+		],
+	)
+	def test_asset_not_found(self):
+		with self.assertRaises(AssetNotFoundError):
+			check_generated()
 
 
 class TestCdnFinder(TemplateContextMixin, TestCase):
