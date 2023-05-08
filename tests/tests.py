@@ -14,6 +14,7 @@ from jinja2.runtime import Context
 
 from PIL import Image
 from django_assets_manager.checks import check_generated
+from django_assets_manager.utils import NoSpaceError
 from django_assets_manager.templatetags.assets_manager import assets, assets_by_type
 
 
@@ -235,8 +236,8 @@ class TestCompilesprites(TemplateContextMixin, TestCase):
 				'output': 'CACHE/sprites.png',
 				'scss_output': 'CACHE/sprites.scss',
 				'extra_sizes': [],
-				'width': 10,
-				'height': 10,
+				'width': 1,
+				'height': 1,
 				'images': (
 					{
 						'name': 'src.png',
@@ -248,4 +249,76 @@ class TestCompilesprites(TemplateContextMixin, TestCase):
 	)
 	def test_single_sprite(self):
 		self.create_image('CACHE/src.png', width=1, height=1)
+		call_command('compilesprites')
+
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 1,
+				'height': 1,
+				'images': (
+					{
+						'name': 'src.png',
+						'src': 'CACHE/src.png',
+						'mode': 'no-repeat',
+					},
+				),
+			},
+		],
+	)
+	def test_simple_no_space(self):
+		self.create_image('CACHE/src.png', width=2, height=2)
+		with self.assertRaises(NoSpaceError):
+			call_command('compilesprites')
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 2,
+				'height': 2,
+				'images': (
+					{'name': '0.png','src': 'CACHE/0.png'},
+					{'name': '1.png','src': 'CACHE/1.png'},
+					{'name': '2.png','src': 'CACHE/2.png'},
+					{'name': '3.png','src': 'CACHE/3.png'},
+				),
+			},
+		],
+	)
+	def test_needs_1px_space(self):
+		for i in range(4):
+			self.create_image(f'CACHE/{i}.png', width=1, height=1)
+		with self.assertRaises(NoSpaceError):
+			call_command('compilesprites')
+
+	@override_settings(
+		ASSETS_MANAGER_SPRITES = [
+			{
+				'name': 'main',
+				'output': 'CACHE/sprites.png',
+				'scss_output': 'CACHE/sprites.scss',
+				'extra_sizes': [],
+				'width': 3,
+				'height': 3,
+				'images': (
+					{'name': '0.png','src': 'CACHE/0.png'},
+					{'name': '1.png','src': 'CACHE/1.png'},
+					{'name': '2.png','src': 'CACHE/2.png'},
+					{'name': '3.png','src': 'CACHE/3.png'},
+				),
+			},
+		],
+	)
+	def test_enough_space(self):
+		for i in range(4):
+			self.create_image(f'CACHE/{i}.png', width=1, height=1)
 		call_command('compilesprites')
