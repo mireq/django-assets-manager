@@ -123,9 +123,7 @@ class SpriteGenerator:
 	def paste_image(self, image):
 		from PIL import Image
 		in_image = Image.open(find_file(image['src']))
-		if image['mode'] == 'no-repeat':
-			self.out_image.paste(in_image, (image['pos'][0] * self.pixel_ratio, image['pos'][1] * self.pixel_ratio))
-		elif image['mode'] == 'repeat-x':
+		if image['mode'] == 'repeat-x':
 			w = image['width']
 			for i in range((self.size[0] + w - 1) // w):
 				self.out_image.paste(in_image, (i * w * self.pixel_ratio, image['pos'][1] * self.pixel_ratio))
@@ -133,6 +131,8 @@ class SpriteGenerator:
 			h = image['height']
 			for i in range((self.size[1] + h - 1) // h):
 				self.out_image.paste(in_image, (image['pos'][0] * self.pixel_ratio, i * h * self.pixel_ratio))
+		else:
+			self.out_image.paste(in_image, (image['pos'][0] * self.pixel_ratio, image['pos'][1] * self.pixel_ratio))
 
 	def generate_scss(self, sprites, sprite_configs):
 		metadata = {
