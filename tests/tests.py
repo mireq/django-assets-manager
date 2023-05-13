@@ -124,7 +124,16 @@ class TestAssets(TemplateContextMixin, TestCase):
 		self.assertEqual('Custom: custom.script', assets_by_type(self.ctx(), 'custom', 'app').strip())
 
 
-class TestChecks(TestCase):
+class ImagesTestMixin(object):
+	def create_image(self, path: str, width: int, height: int):
+		image_path = get_static_path(path)
+		image_path.parent.mkdir(exist_ok=True, parents=True)
+		img = Image.new('RGB', (width, height))
+		img.save(image_path)
+
+
+
+class TestChecks(ImagesTestMixin, TestCase):
 	def setUp(self):
 		clear_cached_static_files()
 
@@ -151,6 +160,10 @@ class TestChecks(TestCase):
 		],
 	)
 	def test_recompilation_needed(self):
+		# Create test images
+		self.create_image('img.png', width=1, height=1)
+		self.create_image('img@2x.png', width=2, height=2)
+
 		# not generated
 		errors = check_generated()
 		self.assertEqual(1, len(errors))
@@ -244,13 +257,7 @@ class TestCdnFinder(TemplateContextMixin, TestCase):
 			self.assertEqual('<script src="/static/CACHE/app/script.js"></script><script src="/static/CACHE/app/script2.js"></script>', assets(self.ctx(), 'app'))
 
 
-class TestCompilesprites(TemplateContextMixin, TestCase):
-	def create_image(self, path: str, width: int, height: int):
-		image_path = get_static_path(path)
-		image_path.parent.mkdir(exist_ok=True, parents=True)
-		img = Image.new('RGB', (width, height))
-		img.save(image_path)
-
+class TestCompilesprites(TemplateContextMixin, ImagesTestMixin, TestCase):
 	@override_settings(
 		ASSETS_MANAGER_SPRITES = [
 			{
