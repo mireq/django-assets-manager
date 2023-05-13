@@ -45,5 +45,5 @@ include = ["django_assets_manager*"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.0.0"
+version = "1.0.0"
 tag_format = "$version"
