@@ -161,7 +161,7 @@ class TestChecks(TestCase):
 		self.assertEqual(0, len(errors))
 
 		# now pretend, that generated file is order
-		older_time = int(datetime.now().timestamp()) - 100000
+		older_time = int(datetime.now().timestamp()) - 1000000000
 		generated_file = get_static_path('CACHE/sprites.png')
 		os.utime(generated_file, (older_time, older_time))
 
